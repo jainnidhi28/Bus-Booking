@@ -3,6 +3,8 @@ from rest_framework import serializers
 from booking.models import Booking, Seat
 from bus.serializers import BusSerializer, BusRouteSerializer
 from core.serializers import UserSerializer
+from .models import BusRoute
+
 
 
 class SeatSerializer(serializers.ModelSerializer):
@@ -33,7 +35,38 @@ class BookingSerializer(serializers.ModelSerializer):
 
         read_only_fields = ["id", "uuid", "created", "modified"]
         
-        
-        
-
    
+   
+class AvailableSeatsSerializer(serializers.ModelSerializer):
+    bus_route = serializers.SerializerMethodField()
+    total_capacity = serializers.SerializerMethodField()
+    booked_seats = serializers.SerializerMethodField()
+    available_seats = serializers.SerializerMethodField()
+    available_seats_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = BusRoute
+        fields = [
+            'uuid',
+            'bus_route',
+            'date',
+            'total_capacity',
+            'booked_seats',
+            'available_seats',
+            'available_seats_count'
+        ]
+
+    def get_bus_route(self, obj):
+        return f"{obj.source} to {obj.destination}"
+
+    def get_total_capacity(self, obj):
+        return obj.available_seats["total_capacity"]
+
+    def get_booked_seats(self, obj):
+        return obj.available_seats["booked_seats"]
+
+    def get_available_seats(self, obj):
+        return obj.available_seats["available_seats"]
+
+    def get_available_seats_count(self, obj):
+        return obj.available_seats["available_seats_count"]     

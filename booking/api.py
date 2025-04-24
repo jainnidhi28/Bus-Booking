@@ -100,29 +100,3 @@ def book_seat(request, booking_uuid):
     else:
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['GET'])
-def get_available_seats(request):
-    try:
-        bus_route_id = int(request.query_params.get('bus_route_id', 0))
-        if not bus_route_id:
-            return Response({"error": "bus_route_id parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        bus_route = BusRoute.objects.select_related('bus').get(id=bus_route_id)
-        booked_seats = Seat.objects.filter(
-            booking__busroute_id=bus_route_id,
-            is_cancelled=False
-        ).values_list('seat_number', flat=True)
-        all_seats = set(range(1, bus_route.bus.capacity + 1))
-        available_seats = sorted(list(all_seats - set(booked_seats)))
-        
-        return Response({
-            "bus_route_id": bus_route_id,
-            "total_capacity": bus_route.bus.capacity,
-            "booked_seats": list(booked_seats),
-            "available_seats": available_seats,
-            "available_seats_count": len(available_seats)
-        })
-    except BusRoute.DoesNotExist:
-        return Response({"error": "Bus route not found"}, status=status.HTTP_404_NOT_FOUND)
-    except ValueError:
-        return Response({"error": "bus_route_id must be a valid integer"}, status=status.HTTP_400_BAD_REQUEST)

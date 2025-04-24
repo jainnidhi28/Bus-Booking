@@ -36,3 +36,6 @@ class BusRouteSerializer(serializers.ModelSerializer):
             "modified"
         ]
         read_only_fields = ["id", "uuid", "created", "modified"]
+        
+    def get_available_seats(self, obj):
+        return obj.available_seats

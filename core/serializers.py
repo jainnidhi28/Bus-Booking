@@ -18,3 +18,8 @@ class UserSerializer(serializers.ModelSerializer):
             "modified",
         ]
         read_only_fields = ["id", "uuid", "created", "modified"]
+        
+    def validate_phone_number(self, value):
+        if User.objects.filter(phone_number=value).exclude(id=self.instance.id if self.instance else None).exists():
+            raise serializers.ValidationError("Phone number already exists.")
+        return value

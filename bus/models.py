@@ -1,5 +1,7 @@
 from django.db import models
 from core.mixins import AbstractTrack
+from django.apps import apps
+
 
 class Bus(AbstractTrack):
     class Types(models.TextChoices):
@@ -28,9 +30,19 @@ class BusRoute(AbstractTrack):
     date = models.DateField()
     def __str__(self):
         return f"Route from {self.source} to {self.destination} for Bus {self.bus.bus_number}"
-
-
-
-
-
-
+    
+    @property
+    def available_seats(self):
+        from booking.models import Seat
+        booked_seats = Seat.objects.filter(
+            booking__busroute=self,
+            is_cancelled=False
+        ).values_list('seat_number', flat=True)
+        all_seats = set(range(1, self.bus.capacity + 1))
+        available_seats = sorted(list(all_seats - set(booked_seats)))
+        return {
+            "total_capacity": self.bus.capacity,
+            "booked_seats": list(booked_seats),
+            "available_seats": available_seats,
+            "available_seats_count": len(available_seats)
+        }

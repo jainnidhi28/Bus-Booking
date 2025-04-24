@@ -9,6 +9,9 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from .serializers import BusSerializer,BusRouteSerializer
 from rest_framework.response import Response
+from rest_framework.decorators import action
+from bus.filters import BusRouteFilter 
+from booking.serializers import AvailableSeatsSerializer
 
 
 
@@ -24,10 +27,16 @@ class BusRouteViewSet(viewsets.ModelViewSet):
     serializer_class = BusRouteSerializer
     permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['source', 'destination']
-    search_fields = ["source", "bus", "destination", "date", "price" ]
+    filterset_class = BusRouteFilter 
+    search_fields = ["source", "bus__name", "destination", "date", "price"]
+    lookup_field = 'uuid'
+    @action(detail=True, methods=['get'])
+    def available_seats(self, request, uuid=None):
+        bus_route = self.get_object()
+        serializer = AvailableSeatsSerializer(bus_route)
+        return Response(serializer.data)
 
-
+    
 @api_view(['GET'])
 def get_buses_betweeen_cities(request):
     source = request.GET.get('source')
